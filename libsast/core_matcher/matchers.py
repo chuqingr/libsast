@@ -1,6 +1,7 @@
 # -*- coding: utf_8 -*-
 """Alogrithms for Matching Pattern."""
 import re
+
 from abc import ABC, abstractclassmethod
 
 from libsast.core_matcher.helpers import get_match_lines
@@ -104,8 +105,8 @@ class RegexAndOr(MatchStrategy):
                     match_pos = get_pos(match)
                     match_lines = get_match_lines(content, match_pos)
                     or_matches.add((match.group(), match_pos, match_lines))
-                    break_parent_loop = True
-                    break
+                    # break_parent_loop = True
+                    # break
             if break_parent_loop:
                 break
         for match in re.compile(rule['pattern'][0]).finditer(content):
@@ -116,4 +117,15 @@ class RegexAndOr(MatchStrategy):
         if not (matches and or_matches):
             return False
         matches.update(or_matches)
-        return matches
+        key = ''
+        for regex in or_list:
+            if not key:
+                key = regex
+            else:
+                key += '|' + regex
+        key = (rule['pattern'][0] + ' -> ' + key).replace("\\", "")
+        new_matches = set()
+        for match in matches:
+            new_match = (key,) + match[1:]
+            new_matches.add(new_match)
+        return new_matches
